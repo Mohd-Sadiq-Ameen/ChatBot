@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tekken AI Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #000000;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 800px;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #1a1a1a;
+      color: white;
+      padding: 20px 30px;
+      text-align: center;
+      position: relative;
+      border-bottom: 1px solid #333;
+    }
+
+    .chat-header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .chat-header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #ffffff;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      background: #ffffff;
+    }
+
+    .message {
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .user-avatar {
+      background: #000000;
+      color: white;
+    }
+
+    .ai-avatar {
+      background: #333333;
+      color: white;
+    }
+
+    .message-content {
+      background: #f5f5f5;
+      padding: 15px 20px;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      line-height: 1.6;
+      color: #000000;
+      border: 1px solid #e0e0e0;
+    }
+
+    .user-message .message-content {
+      background: #000000;
+      color: white;
+      margin-left: 50px;
+      border: 1px solid #333;
+    }
+
+    .ai-message .message-content {
+      margin-right: 50px;
+    }
+
+    .chat-input-container {
+      padding: 20px 30px;
+      background: white;
+      border-top: 1px solid #333333;
+    }
+
+    .input-form {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .chat-input {
+      width: 100%;
+      min-height: 50px;
+      padding: 15px 20px;
+      border: 2px solid #333333;
+      border-radius: 25px;
+      font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
+      max-height: 120px;
+      transition: all 0.3s ease;
+      outline: none;
+      background: white;
+      color: #000000;
+    }
+
+    .chat-input:focus {
+      border-color: #000000;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .send-button {
+      width: 50px;
+      height: 50px;
+      background: #000000;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .send-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+      background: #333333;
+    }
+
+    .send-button:active {
+      transform: translateY(0);
+    }
+
+    .send-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .welcome-message {
+      text-align: center;
+      color: #666666;
+      padding: 40px 20px;
+    }
+
+    .welcome-message h2 {
+      color: #000000;
+      margin-bottom: 10px;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 15px 20px;
+      background: #f5f5f5;
+      border-radius: 15px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      margin-right: 50px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #666666;
+      border-radius: 50%;
+      animation: typing 1.5s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+
+      0%,
+      60%,
+      100% {
+        transform: scale(1);
+        opacity: 0.5;
+      }
+
+      30% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      .chat-container {
+        border-radius: 15px;
+        min-height: 90vh;
+      }
+
+      .chat-header {
+        padding: 15px 20px;
+      }
+
+      .chat-messages {
+        padding: 20px;
+      }
+
+      .chat-input-container {
+        padding: 15px 20px;
+      }
+
+      .user-message .message-content {
+        margin-left: 20px;
+      }
+
+      .ai-message .message-content {
+        margin-right: 20px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .chat-messages {
+        background: #ffffff;
+      }
+
+      .message-content {
+        background: #f5f5f5;
+        color: #000000;
+        border: 1px solid #e0e0e0;
+      }
+
+      .user-message .message-content {
+        background: #000000;
+        color: white;
+        border: 1px solid #333;
+      }
+
+      .chat-input {
+        background: white;
+        border-color: #333333;
+        color: #000000;
+      }
+
+      .typing-indicator {
+        background: #f5f5f5;
+        border: 1px solid #e0e0e0;
+      }
+
+      .message-content {
+        max-width: 80%;
+        word-wrap: break-word;
+      }
+
+      .user-message {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .ai-message {
+        display: flex;
+        justify-content: flex-start;
+      }
+
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h1>AI Assistant</h1>
+
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span style="font-size: 12px;">Online</span>
+      </div>
+    </div>
+
+     <div class="chat-messages" id="chatMessages">
+    {% if conversation|length == 0 %}
+        <div class="welcome-message">
+            <h2>👋 What's on the agenda today?</h2>
+        </div>
+    {% endif %}
+
+    {% for msg in conversation %}
+        <div class="message {% if msg.role == 'user' %}user-message{% else %}ai-message{% endif %}">
+            <div class="message-header">
+                <div class="avatar {% if msg.role == 'user' %}user-avatar{% else %}ai-avatar{% endif %}">
+                    {% if msg.role == 'user' %}You{% else %}T{% endif %}
+                </div>
+                <span style="font-weight: 500; color: #000000;">
+                    {% if msg.role == 'user' %}You{% else %}Tekken{% endif %}
+                </span>
+            </div>
+            <div class="message-content">
+                {{ msg.content }}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+
+    <div class="chat-input-container">
+      <form method="POST" class="input-form" id="chatForm">
+        <div class="input-wrapper">
+          <textarea name="show_data" class="chat-input" placeholder="Ask me anything..." required rows="1"
+            id="messageInput"></textarea>
+        </div>
+        <button type="submit" class="send-button" id="sendButton">
+          ➤
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Auto-resize textarea
+    const messageInput = document.getElementById('messageInput');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    const sendButton = document.getElementById('sendButton');
+
+    messageInput.addEventListener('input', function () {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Handle Enter key (submit on Enter, new line on Shift+Enter)
+    messageInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (this.value.trim()) {
+          chatForm.submit();
+        }
+      }
+    });
+
+    // Show typing indicator when form is submitted
+    chatForm.addEventListener('submit', function (e) {
+      if (messageInput.value.trim()) {
+        sendButton.disabled = true;
+        sendButton.innerHTML = '⏳';
+
+        // Add typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message ai-message';
+        typingDiv.innerHTML = `
+                    <div class="message-header">
+                        <div class="avatar ai-avatar">T</div>
+                        <span style="font-weight: 500; color: #000000;">Tekken</span>
+                    </div>
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                ;`
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    });
+
+    // Auto-scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Focus input on load
+    messageInput.focus();
+  </script>
+</body>
+
+</html>
