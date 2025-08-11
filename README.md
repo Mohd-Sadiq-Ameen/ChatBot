@@ -13,8 +13,8 @@ In the `app.py` file, there is a variable called `system_prompt = ""`.
 You can write instructions in English inside this variable to tell the chatbot how it should behave.  
 For example:
 ```python
-system_prompt = "You are a friendly assistant that answers questions politely."
-
+system_prompt = "You are a friendly assistant that answers questions politely.".
+```
 
 ## 🛠 Installation
 
