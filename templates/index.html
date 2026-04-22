@@ -1,467 +1,1079 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tekken AI Assistant</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalorieAI — Smart Nutrition Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #000000;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #16161f;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.15);
+    --text: #f0eff5;
+    --text-muted: #7a7990;
+    --text-dim: #4a4960;
+    --accent: #c8f065;
+    --accent-dim: rgba(200,240,101,0.12);
+    --accent-glow: rgba(200,240,101,0.25);
+    --danger: #ff6b6b;
+    --danger-dim: rgba(255,107,107,0.12);
+    --blue: #7eb8f7;
+    --blue-dim: rgba(126,184,247,0.12);
+    --orange: #ffb347;
+    --orange-dim: rgba(255,179,71,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
 
-    .chat-container {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 800px;
-      min-height: 600px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+  html { scroll-behavior: smooth; }
 
-    .chat-header {
-      background: #1a1a1a;
-      color: white;
-      padding: 20px 30px;
-      text-align: center;
-      position: relative;
-      border-bottom: 1px solid #333;
-    }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-    .chat-header h1 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 5px;
-    }
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
 
-    .chat-header p {
-      opacity: 0.9;
-      font-size: 14px;
-    }
+  /* Layout */
+  .app-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr 340px;
+    grid-template-rows: 64px 1fr;
+    height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
 
-    .status-indicator {
-      position: absolute;
-      top: 20px;
-      right: 30px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+  /* Top nav */
+  .topnav {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(12px);
+    gap: 16px;
+  }
 
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      background: #ffffff;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-    @keyframes pulse {
+  .logo-dot { 
+    width: 8px; height: 8px; 
+    border-radius: 50%; 
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+    animation: pulse 2s ease-in-out infinite;
+  }
 
-      0%,
-      100% {
-        opacity: 1;
-      }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
 
-      50% {
-        opacity: 0.5;
-      }
-    }
+  .nav-tag {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 9px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 
-    .chat-messages {
-      flex: 1;
-      padding: 30px;
-      overflow-y: auto;
-      background: #ffffff;
-    }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 
-    .message {
-      margin-bottom: 20px;
-      animation: fadeIn 0.5s ease-in;
-    }
+  .date-chip {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
+  /* Sidebar */
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
 
-    .message-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
+  .card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
 
-    .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 14px;
-    }
+  .card:hover { border-color: var(--border-hover); }
 
-    .user-avatar {
-      background: #000000;
-      color: white;
-    }
+  /* Form elements */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
 
-    .ai-avatar {
-      background: #333333;
-      color: white;
-    }
+  .form-row.single { grid-template-columns: 1fr; }
 
-    .message-content {
-      background: #f5f5f5;
-      padding: 15px 20px;
-      border-radius: 15px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      line-height: 1.6;
-      color: #000000;
-      border: 1px solid #e0e0e0;
-    }
+  .field { display: flex; flex-direction: column; gap: 5px; }
 
-    .user-message .message-content {
-      background: #000000;
-      color: white;
-      margin-left: 50px;
-      border: 1px solid #333;
-    }
+  .field label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
 
-    .ai-message .message-content {
-      margin-right: 50px;
-    }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
 
-    .chat-input-container {
-      padding: 20px 30px;
-      background: white;
-      border-top: 1px solid #333333;
-    }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
 
-    .input-form {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-    }
+  .field select option { background: var(--bg2); }
 
-    .input-wrapper {
-      flex: 1;
-      position: relative;
-    }
+  .btn {
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
 
-    .chat-input {
-      width: 100%;
-      min-height: 50px;
-      padding: 15px 20px;
-      border: 2px solid #333333;
-      border-radius: 25px;
-      font-size: 16px;
-      font-family: inherit;
-      resize: vertical;
-      max-height: 120px;
-      transition: all 0.3s ease;
-      outline: none;
-      background: white;
-      color: #000000;
-    }
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0a0f;
+  }
+  .btn-primary:hover { background: #d4f57a; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+  .btn-primary:active { transform: translateY(0); }
 
-    .chat-input:focus {
-      border-color: #000000;
-      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-    }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); background: var(--bg3); }
 
-    .send-button {
-      width: 50px;
-      height: 50px;
-      background: #000000;
-      border: none;
-      border-radius: 50%;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
+  .btn-danger {
+    background: var(--danger-dim);
+    border: 1px solid rgba(255,107,107,0.2);
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(255,107,107,0.2); }
 
-    .send-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-      background: #333333;
-    }
+  /* Main content */
+  .main {
+    padding: 28px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
 
-    .send-button:active {
-      transform: translateY(0);
-    }
+  /* Stats grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
 
-    .send-button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+  }
 
-    .welcome-message {
-      text-align: center;
-      color: #666666;
-      padding: 40px 20px;
-    }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--stat-color, var(--accent));
+    opacity: 0.6;
+  }
 
-    .welcome-message h2 {
-      color: #000000;
-      margin-bottom: 10px;
-    }
+  .stat-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
 
-    .typing-indicator {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 15px 20px;
-      background: #f5f5f5;
-      border-radius: 15px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      margin-right: 50px;
-      border: 1px solid #e0e0e0;
-    }
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
 
-    .typing-dot {
-      width: 8px;
-      height: 8px;
-      background: #666666;
-      border-radius: 50%;
-      animation: typing 1.5s infinite;
-    }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--stat-color, var(--accent));
+    margin-bottom: 4px;
+  }
 
-    .typing-dot:nth-child(2) {
-      animation-delay: 0.2s;
-    }
+  .stat-unit { font-size: 0.85rem; font-weight: 400; opacity: 0.7; }
+  .stat-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
 
-    .typing-dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
+  /* Progress bar */
+  .progress-section {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+  }
 
-    @keyframes typing {
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
 
-      0%,
-      60%,
-      100% {
-        transform: scale(1);
-        opacity: 0.5;
-      }
+  .progress-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+  }
 
-      30% {
-        transform: scale(1.2);
-        opacity: 1;
-      }
-    }
+  .progress-pct {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--accent);
+  }
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
+  .progress-bar-track {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
 
-      .chat-container {
-        border-radius: 15px;
-        min-height: 90vh;
-      }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), #a0e040);
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
 
-      .chat-header {
-        padding: 15px 20px;
-      }
+  .progress-bar-fill.over { background: linear-gradient(90deg, var(--orange), var(--danger)); }
 
-      .chat-messages {
-        padding: 20px;
-      }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
 
-      .chat-input-container {
-        padding: 15px 20px;
-      }
+  /* Food log */
+  .log-section {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    flex: 1;
+  }
 
-      .user-message .message-content {
-        margin-left: 20px;
-      }
+  .log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
 
-      .ai-message .message-content {
-        margin-right: 20px;
-      }
-    }
+  .log-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
 
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-      .chat-messages {
-        background: #ffffff;
-      }
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
 
-      .message-content {
-        background: #f5f5f5;
-        color: #000000;
-        border: 1px solid #e0e0e0;
-      }
+  .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-track { background: transparent; }
+  .log-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
-      .user-message .message-content {
-        background: #000000;
-        color: white;
-        border: 1px solid #333;
-      }
+  .log-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    animation: slideIn 0.25s ease;
+  }
 
-      .chat-input {
-        background: white;
-        border-color: #333333;
-        color: #000000;
-      }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-      .typing-indicator {
-        background: #f5f5f5;
-        border: 1px solid #e0e0e0;
-      }
+  .log-item-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+  }
 
-      .message-content {
-        max-width: 80%;
-        word-wrap: break-word;
-      }
+  .log-item-cal {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent);
+  }
 
-      .user-message {
-        display: flex;
-        justify-content: flex-end;
-      }
+  .log-empty {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 30px 0;
+  }
 
-      .ai-message {
-        display: flex;
-        justify-content: flex-start;
-      }
+  .log-empty span { display: block; font-size: 1.8rem; margin-bottom: 8px; }
 
-    }
-  </style>
+  /* AI Chat panel */
+  .ai-panel {
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ai-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ai-avatar {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(200,240,101,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+
+  .ai-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .ai-status {
+    font-size: 0.72rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .ai-status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-bubble {
+    max-width: 82%;
+    padding: 11px 14px;
+    border-radius: 14px;
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+
+  .msg.ai .msg-bubble {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px 14px 14px 14px;
+    color: var(--text);
+  }
+
+  .msg.user .msg-bubble {
+    background: var(--accent);
+    color: #0a0a0f;
+    border-radius: 14px 4px 14px 14px;
+    font-weight: 500;
+  }
+
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .msg.ai .msg-avatar { background: var(--accent-dim); border: 1px solid rgba(200,240,101,0.2); }
+  .msg.user .msg-avatar { background: var(--bg3); border: 1px solid var(--border); }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 12px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px 14px 14px 14px;
+    width: fit-content;
+  }
+
+  .typing-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typing 1.2s ease-in-out infinite;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing {
+    0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-4px); }
+  }
+
+  .chat-input-area {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    resize: none;
+    height: 42px;
+    transition: border-color 0.2s;
+  }
+
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    width: 42px; height: 42px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #0a0a0f;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  .send-btn:hover { background: #d4f57a; transform: scale(1.05); }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Quick prompts */
+  .quick-prompts {
+    padding: 0 16px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .quick-chip {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .quick-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 20px;
+    font-size: 0.85rem;
+    z-index: 1000;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: rgba(200,240,101,0.3); color: var(--accent); }
+  .toast.error { border-color: rgba(255,107,107,0.3); color: var(--danger); }
+
+  /* Responsive scrollbars */
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  .main::-webkit-scrollbar { width: 4px; }
+  .main::-webkit-scrollbar-track { background: transparent; }
+  .main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* No profile state */
+  .no-profile-banner {
+    background: var(--accent-dim);
+    border: 1px solid rgba(200,240,101,0.2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    font-size: 0.88rem;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 99px;
+    text-transform: uppercase;
+  }
+
+  .badge-green { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,101,0.2); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(126,184,247,0.2); }
+  .badge-orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,179,71,0.2); }
+</style>
 </head>
-
 <body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <h1>AI Assistant</h1>
 
-      <div class="status-indicator">
-        <div class="status-dot"></div>
-        <span style="font-size: 12px;">Online</span>
+<div class="app-shell">
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      CalorieAI
+    </div>
+    <span class="nav-tag">Nutrition Tracker</span>
+    <div class="nav-right">
+      <span class="date-chip" id="dateChip"></span>
+      <span class="badge badge-green" id="profileBadge">No Profile</span>
+    </div>
+  </nav>
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Profile Setup -->
+    <div>
+      <div class="section-label">Your Profile</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="field">
+            <label>Weight (kg)</label>
+            <input type="number" id="weight" placeholder="70" min="30" max="300" step="0.1">
+          </div>
+          <div class="field">
+            <label>Height (cm)</label>
+            <input type="number" id="height" placeholder="175" min="100" max="250">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Age</label>
+            <input type="number" id="age" placeholder="25" min="10" max="100">
+          </div>
+          <div class="field">
+            <label>Gender</label>
+            <select id="gender">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Activity Level</label>
+            <select id="activity">
+              <option value="sedentary">Sedentary (desk job)</option>
+              <option value="light">Light (1–3x/week)</option>
+              <option value="moderate" selected>Moderate (3–5x/week)</option>
+              <option value="active">Active (6–7x/week)</option>
+              <option value="very_active">Very Active (athlete)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Goal</label>
+            <select id="goal">
+              <option value="loss">Lose Weight (−500 kcal)</option>
+              <option value="maintain" selected>Maintain Weight</option>
+              <option value="gain">Gain Muscle (+500 kcal)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Save Profile →</button>
       </div>
     </div>
 
-     <div class="chat-messages" id="chatMessages">
-    {% if conversation|length == 0 %}
-        <div class="welcome-message">
-            <h2>👋 What's on the agenda today?</h2>
+    <!-- Log Food -->
+    <div>
+      <div class="section-label">Log Food</div>
+      <div class="card">
+        <div class="form-row single">
+          <div class="field">
+            <label>Food / Meal Name</label>
+            <input type="text" id="foodName" placeholder="e.g. Chicken rice bowl">
+          </div>
         </div>
-    {% endif %}
+        <div class="form-row single">
+          <div class="field">
+            <label>Calories (kcal)</label>
+            <input type="number" id="foodCal" placeholder="350" min="0" max="5000">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="logFood()">Add Food +</button>
+      </div>
+    </div>
 
-    {% for msg in conversation %}
-        <div class="message {% if msg.role == 'user' %}user-message{% else %}ai-message{% endif %}">
-            <div class="message-header">
-                <div class="avatar {% if msg.role == 'user' %}user-avatar{% else %}ai-avatar{% endif %}">
-                    {% if msg.role == 'user' %}You{% else %}T{% endif %}
-                </div>
-                <span style="font-weight: 500; color: #000000;">
-                    {% if msg.role == 'user' %}You{% else %}Tekken{% endif %}
-                </span>
-            </div>
-            <div class="message-content">
-                {{ msg.content }}
-            </div>
+    <!-- Log Burn -->
+    <div>
+      <div class="section-label">Log Exercise</div>
+      <div class="card">
+        <div class="form-row single">
+          <div class="field">
+            <label>Calories Burned (kcal)</label>
+            <input type="number" id="burnCal" placeholder="250" min="0" max="3000">
+          </div>
         </div>
-    {% endfor %}
+        <button class="btn btn-ghost" onclick="logBurn()">Log Burn 🔥</button>
+      </div>
+    </div>
+
+    <!-- Reset -->
+    <div>
+      <button class="btn btn-danger" onclick="clearDay()">Reset Today's Log</button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <div class="no-profile-banner" id="noBanner">
+      ⚡ Set up your profile on the left to get personalized calorie targets and AI coaching.
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card" style="--stat-color: var(--accent)">
+        <div class="stat-label">Calorie Goal</div>
+        <div class="stat-value" id="statGoal">—<span class="stat-unit"></span></div>
+        <div class="stat-sub" id="statBmr">Set up profile →</div>
+      </div>
+      <div class="stat-card" style="--stat-color: var(--blue)">
+        <div class="stat-label">Consumed</div>
+        <div class="stat-value" id="statEaten">0<span class="stat-unit"> kcal</span></div>
+        <div class="stat-sub" id="statFoodCount">0 entries logged</div>
+      </div>
+      <div class="stat-card" style="--stat-color: var(--orange)">
+        <div class="stat-label">Burned</div>
+        <div class="stat-value" id="statBurn">0<span class="stat-unit"> kcal</span></div>
+        <div class="stat-sub">Exercise calories</div>
+      </div>
+      <div class="stat-card" style="--stat-color: var(--accent)" id="netCard">
+        <div class="stat-label">Remaining</div>
+        <div class="stat-value" id="statRemaining">—<span class="stat-unit"></span></div>
+        <div class="stat-sub" id="statNet">Net: — kcal</div>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <div class="progress-title">Daily Progress</div>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="progress-meta">
+        <span id="progressLeft">— kcal remaining</span>
+        <span id="progressGoalLabel">Goal: — kcal</span>
+      </div>
+    </div>
+
+    <!-- Food Log -->
+    <div class="log-section">
+      <div class="log-header">
+        <div class="log-title">Today's Food Log</div>
+        <span class="badge badge-blue" id="logCount">0 items</span>
+      </div>
+      <div class="log-list" id="foodLogList">
+        <div class="log-empty">
+          <span>🥗</span>
+          Log your first meal to get started
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- AI PANEL -->
+  <aside class="ai-panel">
+    <div class="ai-header">
+      <div class="ai-avatar">🤖</div>
+      <div>
+        <div class="ai-name">CalorieAI Coach</div>
+        <div class="ai-status">
+          <div class="ai-status-dot"></div>
+          Online · Gemini 2.0
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg ai">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">
+          Hey! I'm your AI nutrition coach. Set up your profile and start logging meals — I'll give you personalized advice based on your actual stats. What's your goal today?
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-prompts" id="quickPrompts">
+      <button class="quick-chip" onclick="quickPrompt('Am I on track today?')">On track?</button>
+      <button class="quick-chip" onclick="quickPrompt('Suggest a high-protein meal under 400 calories')">Meal idea</button>
+      <button class="quick-chip" onclick="quickPrompt('Explain my BMR and TDEE')">My BMR?</button>
+      <button class="quick-chip" onclick="quickPrompt('What should I eat for dinner?')">Dinner?</button>
+      <button class="quick-chip" onclick="quickPrompt('How can I burn more calories?')">Burn more</button>
+    </div>
+
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chatInput" placeholder="Ask your coach..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+      ></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+  </aside>
+
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-    <div class="chat-input-container">
-      <form method="POST" class="input-form" id="chatForm">
-        <div class="input-wrapper">
-          <textarea name="show_data" class="chat-input" placeholder="Ask me anything..." required rows="1"
-            id="messageInput"></textarea>
+<script>
+  // State
+  let stats = { profile: null, food_log: [], food_total: 0, burn_total: 0, net: 0, goal: 0, remaining: 0 };
+
+  // Date
+  document.getElementById('dateChip').textContent = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+
+  // Toast
+  function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = (type === 'success' ? '✓ ' : '✗ ') + msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // API helper
+  async function api(url, method='GET', body=null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    return r.json();
+  }
+
+  // Refresh stats
+  async function refreshStats() {
+    const d = await api('/api/stats');
+    stats = d;
+    updateUI(d);
+  }
+
+  function updateUI(d) {
+    const hasProfile = d.profile && d.profile.calorie_goal;
+
+    // Banner
+    document.getElementById('noBanner').style.display = hasProfile ? 'none' : 'flex';
+
+    // Stats
+    if (hasProfile) {
+      document.getElementById('statGoal').innerHTML = `${d.goal}<span class="stat-unit"> kcal</span>`;
+      document.getElementById('statBmr').textContent = `BMR: ${d.profile.bmr} · TDEE: ${d.profile.tdee}`;
+      document.getElementById('profileBadge').textContent = `${d.profile.goal === 'loss' ? '↓ Loss' : d.profile.goal === 'gain' ? '↑ Gain' : '= Maintain'}`;
+    }
+
+    document.getElementById('statEaten').innerHTML = `${Math.round(d.food_total)}<span class="stat-unit"> kcal</span>`;
+    document.getElementById('statFoodCount').textContent = `${d.food_log.length} entr${d.food_log.length !== 1 ? 'ies' : 'y'} logged`;
+    document.getElementById('statBurn').innerHTML = `${Math.round(d.burn_total)}<span class="stat-unit"> kcal</span>`;
+
+    if (hasProfile) {
+      const rem = Math.round(d.remaining);
+      const isOver = rem < 0;
+      document.getElementById('statRemaining').innerHTML = `${isOver ? '+' : ''}${Math.abs(rem)}<span class="stat-unit"> kcal</span>`;
+      document.getElementById('statRemaining').style.color = isOver ? 'var(--danger)' : 'var(--accent)';
+      document.getElementById('statNet').textContent = `Net: ${Math.round(d.net)} kcal consumed`;
+
+      const pct = Math.min(Math.round((d.net / d.goal) * 100), 150);
+      document.getElementById('progressPct').textContent = `${pct}%`;
+      const fill = document.getElementById('progressFill');
+      fill.style.width = `${Math.min(pct, 100)}%`;
+      fill.className = `progress-bar-fill${pct > 100 ? ' over' : ''}`;
+      document.getElementById('progressLeft').textContent = rem < 0 ? `${Math.abs(rem)} kcal over goal` : `${rem} kcal remaining`;
+      document.getElementById('progressGoalLabel').textContent = `Goal: ${d.goal} kcal`;
+    }
+
+    // Food log
+    const list = document.getElementById('foodLogList');
+    const count = document.getElementById('logCount');
+    count.textContent = `${d.food_log.length} item${d.food_log.length !== 1 ? 's' : ''}`;
+
+    if (d.food_log.length === 0) {
+      list.innerHTML = `<div class="log-empty"><span>🥗</span>Log your first meal to get started</div>`;
+    } else {
+      list.innerHTML = d.food_log.map(e => `
+        <div class="log-item">
+          <span class="log-item-name">${e.name}</span>
+          <span class="log-item-cal">${Math.round(e.calories)} kcal</span>
         </div>
-        <button type="submit" class="send-button" id="sendButton">
-          ➤
-        </button>
-      </form>
-    </div>
-  </div>
+      `).join('');
+      list.scrollTop = list.scrollHeight;
+    }
+  }
 
-  <script>
-    // Auto-resize textarea
-    const messageInput = document.getElementById('messageInput');
-    const chatMessages = document.getElementById('chatMessages');
-    const chatForm = document.getElementById('chatForm');
-    const sendButton = document.getElementById('sendButton');
+  // Save profile
+  async function saveProfile() {
+    const w = parseFloat(document.getElementById('weight').value);
+    const h = parseFloat(document.getElementById('height').value);
+    const a = parseFloat(document.getElementById('age').value);
+    if (!w || !h || !a) { showToast('Fill in all profile fields', 'error'); return; }
 
-    messageInput.addEventListener('input', function () {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    const d = await api('/api/profile', 'POST', {
+      weight: w, height: h, age: a,
+      gender: document.getElementById('gender').value,
+      activity: document.getElementById('activity').value,
+      goal: document.getElementById('goal').value
     });
 
-    // Handle Enter key (submit on Enter, new line on Shift+Enter)
-    messageInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        if (this.value.trim()) {
-          chatForm.submit();
-        }
-      }
-    });
+    if (d.success) {
+      showToast('Profile saved! Targets calculated.');
+      refreshStats();
+    }
+  }
 
-    // Show typing indicator when form is submitted
-    chatForm.addEventListener('submit', function (e) {
-      if (messageInput.value.trim()) {
-        sendButton.disabled = true;
-        sendButton.innerHTML = '⏳';
+  // Log food
+  async function logFood() {
+    const name = document.getElementById('foodName').value.trim();
+    const cal = parseFloat(document.getElementById('foodCal').value);
+    if (!name || !cal) { showToast('Enter food name and calories', 'error'); return; }
 
-        // Add typing indicator
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'message ai-message';
-        typingDiv.innerHTML = `
-                    <div class="message-header">
-                        <div class="avatar ai-avatar">T</div>
-                        <span style="font-weight: 500; color: #000000;">Tekken</span>
-                    </div>
-                    <div class="typing-indicator">
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                    </div>
-                ;`
-        chatMessages.appendChild(typingDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-    });
+    const d = await api('/api/log/food', 'POST', { name, calories: cal });
+    if (d.success) {
+      document.getElementById('foodName').value = '';
+      document.getElementById('foodCal').value = '';
+      showToast(`${name} logged!`);
+      refreshStats();
+    }
+  }
 
-    // Auto-scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+  // Log burn
+  async function logBurn() {
+    const cal = parseFloat(document.getElementById('burnCal').value);
+    if (!cal) { showToast('Enter calories burned', 'error'); return; }
 
-    // Focus input on load
-    messageInput.focus();
-  </script>
+    const d = await api('/api/log/burn', 'POST', { calories: cal });
+    if (d.success) {
+      document.getElementById('burnCal').value = '';
+      showToast(`${cal} kcal burn logged 🔥`);
+      refreshStats();
+    }
+  }
+
+  // Clear day
+  async function clearDay() {
+    if (!confirm('Reset today\'s food and burn log?')) return;
+    const d = await api('/api/log/clear', 'POST');
+    if (d.success) { showToast('Log cleared'); refreshStats(); }
+  }
+
+  // Chat
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    document.getElementById('sendBtn').disabled = true;
+
+    appendMsg('user', msg);
+
+    // Typing indicator
+    const typingId = 'typing-' + Date.now();
+    const chat = document.getElementById('chatMessages');
+    chat.innerHTML += `
+      <div class="msg ai" id="${typingId}">
+        <div class="msg-avatar">🤖</div>
+        <div class="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>`;
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const d = await api('/api/chat', 'POST', { message: msg });
+      document.getElementById(typingId)?.remove();
+      if (d.reply) appendMsg('ai', d.reply);
+      else appendMsg('ai', '⚠️ ' + (d.error || 'Something went wrong.'));
+    } catch {
+      document.getElementById(typingId)?.remove();
+      appendMsg('ai', '⚠️ Connection error. Try again.');
+    }
+
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+
+  function appendMsg(role, text) {
+    const chat = document.getElementById('chatMessages');
+    const isAI = role === 'ai';
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+      <div class="msg-avatar">${isAI ? '🤖' : '👤'}</div>
+      <div class="msg-bubble">${text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function quickPrompt(text) {
+    document.getElementById('chatInput').value = text;
+    sendMessage();
+  }
+
+  // Init
+  refreshStats();
+</script>
 </body>
-
 </html>

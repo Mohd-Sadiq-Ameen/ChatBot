@@ -1,44 +1,35 @@
-# ChatBot
+CalorieAI 🥗
+A smart calorie tracking web app powered by Flask + Gemini AI.
+Setup
 
-A simple **Flask-based ChatBot application** using Google's Gemini API.
+Install dependencies
 
-## 🚀 Features
-- Built with Flask
-- Simple web interface for chatting
-- Easy to customize
+bash   pip install -r requirements.txt
 
-## 📝 Customizing the ChatBot
+Add your Gemini API key
 
-In the `app.py` file, there is a variable called `system_prompt = ""`.  
-You can write instructions in English inside this variable to tell the chatbot how it should behave.  
-For example:
-```python
-system_prompt = "You are a friendly assistant that answers questions politely.".
-```
+bash   cp .env.example .env
+   # Edit .env and add your GOOGLE_API_KEY
 
-## 🛠 Installation
+Run the app
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Mohd-Sadiq-Ameen/ChatBot.git
-   cd ChatBot
-   ```
+bash   python app.py
 
-2. **Create a `.env` file** in the project root and add your Gemini API key:
-   ```ini
-   GEMINI_API=your_api_key_here
-   ```
+Open http://localhost:5000 in your browser.
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Features
 
-4. **Run the Flask app**
-   ```bash
-   python app.py
-   ```
+BMR & TDEE Calculator — Mifflin-St Jeor formula with activity multipliers
+Daily Food Log — Track meals and calories consumed
+Exercise Log — Log burned calories
+Progress Bar — Visual progress toward daily goal
+AI Coach — Gemini 2.0 Flash chatbot with full awareness of your stats
+Quick Prompts — One-click coaching questions
 
-5. **5. Open your browser and go to:**
-
-      http://127.0.0.1:5000
+Structure
+CalorieAI/
+├── app.py              # Flask backend + Gemini AI
+├── requirements.txt
+├── .env                # Your API key (don't commit!)
+└── templates/
+    └── index.html      # Full UI
