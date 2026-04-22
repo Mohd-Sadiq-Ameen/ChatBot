@@ -1,15 +1,14 @@
 from flask import Flask, request, render_template, jsonify, session
 from dotenv import load_dotenv
-import google.generativeai as genai
+from groq import Groq
 import os
-import json
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = Groq(api_key=os.getenv("Groq_API_KEY"))
 
 SYSTEM_PROMPT = """You are CalorieAI — a sharp, knowledgeable nutrition and fitness coach embedded in a calorie tracking app. You have access to the user's current stats when they share them.
 
@@ -30,16 +29,8 @@ You help with:
 
 When the user shares their stats (calories eaten, burned, goal, BMR etc.), reference those numbers specifically in your advice. Be a real coach, not a generic chatbot."""
 
-chat_sessions = {}
-
-def get_chat_session(session_id):
-    if session_id not in chat_sessions:
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=SYSTEM_PROMPT
-        )
-        chat_sessions[session_id] = model.start_chat(history=[])
-    return chat_sessions[session_id]
+# Store per-session chat history: { session_id: [{"role": ..., "content": ...}] }
+chat_histories = {}
 
 def calculate_bmr(weight, height, age, gender):
     if gender == "male":
@@ -65,6 +56,10 @@ def get_calorie_goal(tdee, goal):
     return tdee
 
 @app.route("/")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/app")
 def index():
     if "session_id" not in session:
         session["session_id"] = os.urandom(16).hex()
@@ -97,7 +92,7 @@ def log_food():
     d = request.json
     if "food_log" not in session:
         session["food_log"] = []
-    entry = {"name": d["name"], "calories": float(d["calories"])}
+    entry = {"name": d["name"], "calories": float(d["calories"]), "portion": d.get("portion", "")}
     log = session["food_log"]
     log.append(entry)
     session["food_log"] = log
@@ -137,6 +132,47 @@ def get_stats():
         "remaining": remaining
     })
 
+@app.route("/api/estimate", methods=["POST"])
+def estimate_calories():
+    import json as _json
+    d = request.json
+    food = d.get("food", "").strip()
+    portion = d.get("portion", "").strip()
+    if not food:
+        return jsonify({"error": "No food provided"}), 400
+
+    prompt = f"""You are a nutrition database. Estimate calories for this food and portion size.
+Food: {food}
+Portion: {portion}
+Respond ONLY with valid JSON, no markdown:
+{{
+  "food_name": "clean display name",
+  "calories": <integer best estimate>,
+  "cal_min": <integer -20 percent lower>,
+  "cal_max": <integer +20 percent upper>,
+  "confidence": "<low|medium|high>",
+  "confidence_reason": "<one short sentence>",
+  "portion_desc": "<e.g. 1 medium bowl approx 300g>",
+  "macros": {{"protein_g": <int>, "carbs_g": <int>, "fat_g": <int>}}
+}}"""
+
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=300,
+            temperature=0.3,
+        )
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("'''"):
+            raw = raw.split("'''")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        result = _json.loads(raw.strip())
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/chat", methods=["POST"])
 def chat():
     d = request.json
@@ -145,7 +181,8 @@ def chat():
         return jsonify({"error": "Empty message"}), 400
 
     session_id = session.get("session_id", "default")
-    chat_obj = get_chat_session(session_id)
+    if session_id not in chat_histories:
+        chat_histories[session_id] = []
 
     profile = session.get("profile", {})
     food_log = session.get("food_log", [])
@@ -153,18 +190,24 @@ def chat():
     food_total = sum(e["calories"] for e in food_log)
     net = food_total - burn_total
 
-    context = ""
     if profile:
         goal_map = {"loss": "weight loss", "gain": "muscle gain", "maintain": "maintenance"}
-        context = f"""[User's current stats: Weight={profile.get('weight')}kg, Height={profile.get('height')}cm, Age={profile.get('age')}, Gender={profile.get('gender')}, Goal={goal_map.get(profile.get('goal','maintain'))}, BMR={profile.get('bmr')} kcal, TDEE={profile.get('tdee')} kcal, Calorie target={profile.get('calorie_goal')} kcal, Eaten today={food_total} kcal, Burned={burn_total} kcal, Net intake={net} kcal, Remaining={profile.get('calorie_goal',2000)-net} kcal]
-
-User message: {user_message}"""
+        context = f"[User stats: Weight={profile.get('weight')}kg, Height={profile.get('height')}cm, Age={profile.get('age')}, Gender={profile.get('gender')}, Goal={goal_map.get(profile.get('goal','maintain'))}, BMR={profile.get('bmr')} kcal, TDEE={profile.get('tdee')} kcal, Target={profile.get('calorie_goal')} kcal, Eaten={food_total} kcal, Burned={burn_total} kcal, Net={net} kcal, Remaining={profile.get('calorie_goal',2000)-net} kcal]\n\n{user_message}"
     else:
         context = user_message
 
+    chat_histories[session_id].append({"role": "user", "content": context})
+
     try:
-        response = chat_obj.send_message(context)
-        return jsonify({"reply": response.text})
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + chat_histories[session_id],
+            max_tokens=1024,
+            temperature=0.7,
+        )
+        reply = response.choices[0].message.content
+        chat_histories[session_id].append({"role": "assistant", "content": reply})
+        return jsonify({"reply": reply})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

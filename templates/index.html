@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,6 +30,26 @@
     --orange-dim: rgba(255,179,71,0.12);
     --radius: 16px;
     --radius-sm: 10px;
+  }
+
+  html.light {
+    --bg: #f4f4f0;
+    --bg2: #eaeae4;
+    --bg3: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border-hover: rgba(0,0,0,0.18);
+    --text: #1a1a22;
+    --text-muted: #6b6b80;
+    --text-dim: #a0a0b0;
+    --accent: #5a9e00;
+    --accent-dim: rgba(90,158,0,0.10);
+    --accent-glow: rgba(90,158,0,0.20);
+    --danger: #d94040;
+    --danger-dim: rgba(217,64,64,0.10);
+    --blue: #2a72c8;
+    --blue-dim: rgba(42,114,200,0.10);
+    --orange: #c97000;
+    --orange-dim: rgba(201,112,0,0.10);
   }
 
   html { scroll-behavior: smooth; }
@@ -646,6 +667,21 @@
     gap: 10px;
   }
 
+  .theme-toggle {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg3);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: var(--border-hover); color: var(--text); }
+
   .badge {
     font-size: 0.7rem;
     font-weight: 700;
@@ -658,6 +694,187 @@
   .badge-green { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,240,101,0.2); }
   .badge-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(126,184,247,0.2); }
   .badge-orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,179,71,0.2); }
+
+  /* ---- Smart Food Logger ---- */
+  .field-label-sm {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    display: block;
+    margin-bottom: 7px;
+  }
+
+  .portion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .portion-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+  }
+
+  .portion-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .portion-btn.selected { border-color: var(--accent); background: var(--accent-dim); box-shadow: 0 0 0 2px var(--accent-glow); }
+  .portion-btn .p-icon { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+  .portion-btn .p-label { font-size: 0.75rem; font-weight: 600; display: block; color: var(--text); }
+  .portion-btn .p-sub { font-size: 0.66rem; color: var(--text-muted); display: block; margin-top: 1px; }
+
+  .estimate-result {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+
+  .estimate-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+
+  .estimate-food-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .estimate-portion-desc { font-size: 0.73rem; color: var(--text-muted); }
+
+  .estimate-cal-block { text-align: right; flex-shrink: 0; }
+
+  .estimate-cal {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.7rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .estimate-cal-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  .estimate-range-bar-wrap { margin-bottom: 10px; }
+
+  .estimate-range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+  }
+
+  .estimate-range-track {
+    height: 6px;
+    background: var(--bg2);
+    border-radius: 99px;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+
+  .estimate-range-fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: linear-gradient(90deg, var(--blue-dim), var(--accent-dim));
+    border-radius: 99px;
+    left: 10%; right: 10%;
+  }
+
+  .estimate-range-dot {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  .estimate-range-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  .estimate-confidence {
+    font-size: 0.74rem;
+    padding: 5px 10px;
+    border-radius: 99px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    border: 1px solid;
+  }
+
+  .conf-high { background: var(--accent-dim); color: var(--accent); border-color: rgba(200,240,101,0.25); }
+  .conf-medium { background: var(--orange-dim); color: var(--orange); border-color: rgba(255,179,71,0.25); }
+  .conf-low { background: var(--danger-dim); color: var(--danger); border-color: rgba(255,107,107,0.25); }
+
+  .estimate-macros { display: flex; gap: 8px; margin-bottom: 2px; }
+
+  .macro-chip {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 4px;
+    text-align: center;
+  }
+
+  .macro-chip .mc-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: block;
+  }
+
+  .macro-chip .mc-label {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .mc-protein { color: var(--blue); }
+  .mc-carbs { color: var(--orange); }
+  .mc-fat { color: var(--danger); }
+
+  .spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .log-item-meta { font-size: 0.68rem; color: var(--text-dim); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -672,7 +889,9 @@
     </div>
     <span class="nav-tag">Nutrition Tracker</span>
     <div class="nav-right">
+      <a href="/" style="font-size:0.78rem; color:var(--text-muted); text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">← Home</a>
       <span class="date-chip" id="dateChip"></span>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark">🌙</button>
       <span class="badge badge-green" id="profileBadge">No Profile</span>
     </div>
   </nav>
@@ -736,20 +955,58 @@
     <!-- Log Food -->
     <div>
       <div class="section-label">Log Food</div>
-      <div class="card">
+      <div class="card" style="padding: 16px;">
         <div class="form-row single">
           <div class="field">
-            <label>Food / Meal Name</label>
-            <input type="text" id="foodName" placeholder="e.g. Chicken rice bowl">
+            <label>What did you eat?</label>
+            <input type="text" id="foodName" placeholder="e.g. Dal rice, banana, chai..." autocomplete="off" oninput="onFoodInput()">
           </div>
         </div>
-        <div class="form-row single">
-          <div class="field">
-            <label>Calories (kcal)</label>
-            <input type="number" id="foodCal" placeholder="350" min="0" max="5000">
+
+        <!-- Portion selector — shown after food typed -->
+        <div id="portionSection" style="display:none; margin-top: 10px;">
+          <label class="field-label-sm">How much?</label>
+          <div class="portion-grid" id="portionGrid"></div>
+        </div>
+
+        <!-- AI Estimate result card -->
+        <div id="estimateCard" style="display:none; margin-top:12px;">
+          <div class="estimate-result">
+            <div class="estimate-top">
+              <div>
+                <div class="estimate-food-name" id="estFoodName"></div>
+                <div class="estimate-portion-desc" id="estPortionDesc"></div>
+              </div>
+              <div class="estimate-cal-block">
+                <div class="estimate-cal" id="estCal"></div>
+                <div class="estimate-cal-label">kcal</div>
+              </div>
+            </div>
+            <div class="estimate-range-bar-wrap">
+              <div class="estimate-range-labels">
+                <span id="estMin"></span>
+                <span id="estMax"></span>
+              </div>
+              <div class="estimate-range-track">
+                <div class="estimate-range-fill" id="estRangeFill"></div>
+                <div class="estimate-range-dot" id="estRangeDot"></div>
+              </div>
+              <div class="estimate-range-legend">
+                <span>Lower estimate</span><span>Upper estimate</span>
+              </div>
+            </div>
+            <div class="estimate-confidence" id="estConfidence"></div>
+            <div class="estimate-macros" id="estMacros"></div>
+            <button class="btn btn-primary" style="margin-top:10px;" onclick="confirmLog()">Log This ✓</button>
+            <button class="btn btn-ghost" style="margin-top:6px;" onclick="resetFoodForm()">Change</button>
           </div>
         </div>
-        <button class="btn btn-primary" onclick="logFood()">Add Food +</button>
+
+        <!-- Estimating spinner -->
+        <div id="estimatingSpinner" style="display:none; text-align:center; padding: 16px 0;">
+          <div class="spinner"></div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">Estimating calories…</div>
+        </div>
       </div>
     </div>
 
@@ -844,7 +1101,7 @@
         <div class="ai-name">CalorieAI Coach</div>
         <div class="ai-status">
           <div class="ai-status-dot"></div>
-          Online · Gemini 2.0
+          Online · Llama 3.3 70B
         </div>
       </div>
     </div>
@@ -880,6 +1137,18 @@
 <div class="toast" id="toast"></div>
 
 <script>
+  // Theme
+  function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light');
+    document.getElementById('themeToggle').textContent = isLight ? '☀️' : '🌙';
+    localStorage.setItem('calorieai-theme', isLight ? 'light' : 'dark');
+  }
+  // Restore saved theme
+  if (localStorage.getItem('calorieai-theme') === 'light') {
+    document.documentElement.classList.add('light');
+    document.getElementById('themeToggle').textContent = '☀️';
+  }
+
   // State
   let stats = { profile: null, food_log: [], food_total: 0, burn_total: 0, net: 0, goal: 0, remaining: 0 };
 
@@ -952,7 +1221,10 @@
     } else {
       list.innerHTML = d.food_log.map(e => `
         <div class="log-item">
-          <span class="log-item-name">${e.name}</span>
+          <div>
+            <span class="log-item-name">${e.name}</span>
+            ${e.portion ? `<div class="log-item-meta">${e.portion}</div>` : ''}
+          </div>
           <span class="log-item-cal">${Math.round(e.calories)} kcal</span>
         </div>
       `).join('');
@@ -962,10 +1234,15 @@
 
   // Save profile
   async function saveProfile() {
-    const w = parseFloat(document.getElementById('weight').value);
-    const h = parseFloat(document.getElementById('height').value);
-    const a = parseFloat(document.getElementById('age').value);
-    if (!w || !h || !a) { showToast('Fill in all profile fields', 'error'); return; }
+    const wVal = document.getElementById('weight').value.trim();
+    const hVal = document.getElementById('height').value.trim();
+    const aVal = document.getElementById('age').value.trim();
+    const w = parseFloat(wVal);
+    const h = parseFloat(hVal);
+    const a = parseFloat(aVal);
+    if (!wVal || !hVal || !aVal || isNaN(w) || isNaN(h) || isNaN(a)) {
+      showToast('Fill in weight, height and age', 'error'); return;
+    }
 
     const d = await api('/api/profile', 'POST', {
       weight: w, height: h, age: a,
@@ -980,19 +1257,159 @@
     }
   }
 
-  // Log food
-  async function logFood() {
-    const name = document.getElementById('foodName').value.trim();
-    const cal = parseFloat(document.getElementById('foodCal').value);
-    if (!name || !cal) { showToast('Enter food name and calories', 'error'); return; }
+  // ---- Smart Food Logger ----
+  let currentEstimate = null;
+  let selectedPortion = null;
+  let foodDebounce = null;
 
-    const d = await api('/api/log/food', 'POST', { name, calories: cal });
+  // Portion configs keyed by detected food type
+  const PORTION_SETS = {
+    drink: [
+      { key: "small_glass", icon: "🥛", label: "Small Glass", sub: "~150ml" },
+      { key: "medium_glass", icon: "🧃", label: "Medium Glass", sub: "~250ml" },
+      { key: "large_glass", icon: "🍺", label: "Large Glass", sub: "~400ml" },
+      { key: "cup", icon: "☕", label: "Cup / Mug", sub: "~200ml" },
+    ],
+    fruit: [
+      { key: "small", icon: "🍓", label: "Small", sub: "e.g. 1 small piece" },
+      { key: "medium", icon: "🍎", label: "Medium", sub: "e.g. 1 normal piece" },
+      { key: "large", icon: "🍉", label: "Large", sub: "e.g. 1 big piece" },
+      { key: "handful", icon: "🤌", label: "Handful", sub: "~80g" },
+    ],
+    snack: [
+      { key: "small_pack", icon: "🍬", label: "A Few Pieces", sub: "~3–5 pieces" },
+      { key: "medium_pack", icon: "🍫", label: "Small Pack", sub: "~30g" },
+      { key: "large_pack", icon: "🍿", label: "Full Pack", sub: "~60–80g" },
+      { key: "one_piece", icon: "🎯", label: "One Piece", sub: "1 unit" },
+    ],
+    default: [
+      { key: "small_plate", icon: "🍽️", label: "Small Plate", sub: "~250–300g" },
+      { key: "medium_plate", icon: "🫕", label: "Medium Plate", sub: "~400–500g" },
+      { key: "large_plate", icon: "🥘", label: "Large Plate", sub: "~600–700g" },
+      { key: "half_plate", icon: "🥗", label: "Half Plate", sub: "~150–200g" },
+    ],
+  };
+
+  const DRINK_WORDS = ["juice","chai","tea","coffee","milk","lassi","shake","smoothie","water","soda","drink","beverage","lemonade","coconut water","soup","broth","buttermilk","coke","pepsi","beer","wine","alcohol"];
+  const FRUIT_WORDS = ["apple","banana","mango","orange","grape","watermelon","papaya","guava","pomegranate","strawberry","pear","peach","cherry","fig","lychee","plum","kiwi","fruit"];
+  const SNACK_WORDS = ["biscuit","cookie","chocolate","chips","candy","namkeen","nuts","peanut","cashew","almond","popcorn","cracker","wafer","bar","laddoo","barfi","mithai","sweet"];
+
+  function detectFoodType(name) {
+    const n = name.toLowerCase();
+    if (DRINK_WORDS.some(w => n.includes(w))) return "drink";
+    if (FRUIT_WORDS.some(w => n.includes(w))) return "fruit";
+    if (SNACK_WORDS.some(w => n.includes(w))) return "snack";
+    return "default";
+  }
+
+  function onFoodInput() {
+    const name = document.getElementById('foodName').value.trim();
+    clearTimeout(foodDebounce);
+    resetFoodForm(true);
+    if (name.length < 2) return;
+    foodDebounce = setTimeout(() => showPortions(name), 400);
+  }
+
+  function showPortions(name) {
+    const type = detectFoodType(name);
+    const portions = PORTION_SETS[type];
+    const grid = document.getElementById('portionGrid');
+    grid.innerHTML = portions.map(p => `
+      <button class="portion-btn" onclick="selectPortion('${p.key}', '${p.label} ${p.sub}', this)">
+        <span class="p-icon">${p.icon}</span>
+        <span class="p-label">${p.label}</span>
+        <span class="p-sub">${p.sub}</span>
+      </button>
+    `).join('');
+    document.getElementById('portionSection').style.display = 'block';
+  }
+
+  function selectPortion(key, label, btn) {
+    document.querySelectorAll('.portion-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedPortion = label;
+    fetchEstimate();
+  }
+
+  async function fetchEstimate() {
+    const food = document.getElementById('foodName').value.trim();
+    if (!food || !selectedPortion) return;
+
+    document.getElementById('estimateCard').style.display = 'none';
+    document.getElementById('estimatingSpinner').style.display = 'block';
+
+    try {
+      const res = await fetch('/api/estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ food, portion: selectedPortion })
+      });
+      const d = await res.json();
+      document.getElementById('estimatingSpinner').style.display = 'none';
+
+      if (d.error) { showToast('Could not estimate: ' + d.error, 'error'); return; }
+
+      currentEstimate = d;
+      renderEstimate(d);
+    } catch(e) {
+      document.getElementById('estimatingSpinner').style.display = 'none';
+      showToast('Estimation failed', 'error');
+    }
+  }
+
+  function renderEstimate(d) {
+    document.getElementById('estFoodName').textContent = d.food_name;
+    document.getElementById('estPortionDesc').textContent = d.portion_desc;
+    document.getElementById('estCal').textContent = d.calories;
+    document.getElementById('estMin').textContent = d.cal_min + ' kcal';
+    document.getElementById('estMax').textContent = d.cal_max + ' kcal';
+
+    // Confidence
+    const confEl = document.getElementById('estConfidence');
+    const confMap = {
+      high: { cls: 'conf-high', icon: '✓', text: 'High accuracy' },
+      medium: { cls: 'conf-medium', icon: '~', text: 'Medium accuracy' },
+      low: { cls: 'conf-low', icon: '!', text: 'Low accuracy' },
+    };
+    const c = confMap[d.confidence] || confMap.medium;
+    confEl.className = `estimate-confidence ${c.cls}`;
+    confEl.innerHTML = `<span>${c.icon}</span> ${c.text} · ${d.confidence_reason}`;
+
+    // Macros
+    const m = d.macros || {};
+    document.getElementById('estMacros').innerHTML = `
+      <div class="macro-chip"><span class="mc-val mc-protein">${m.protein_g ?? '—'}g</span><span class="mc-label">Protein</span></div>
+      <div class="macro-chip"><span class="mc-val mc-carbs">${m.carbs_g ?? '—'}g</span><span class="mc-label">Carbs</span></div>
+      <div class="macro-chip"><span class="mc-val mc-fat">${m.fat_g ?? '—'}g</span><span class="mc-label">Fat</span></div>
+    `;
+
+    document.getElementById('estimateCard').style.display = 'block';
+  }
+
+  async function confirmLog() {
+    if (!currentEstimate) return;
+    const res = await fetch('/api/log/food', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: currentEstimate.food_name, calories: currentEstimate.calories, portion: currentEstimate.portion_desc })
+    });
+    const d = await res.json();
     if (d.success) {
-      document.getElementById('foodName').value = '';
-      document.getElementById('foodCal').value = '';
-      showToast(`${name} logged!`);
+      showToast(`${currentEstimate.food_name} logged — ${currentEstimate.calories} kcal`);
+      resetFoodForm();
       refreshStats();
     }
+  }
+
+  function resetFoodForm(keepName = false) {
+    if (!keepName) document.getElementById('foodName').value = '';
+    document.getElementById('portionSection').style.display = 'none';
+    document.getElementById('estimateCard').style.display = 'none';
+    document.getElementById('estimatingSpinner').style.display = 'none';
+    selectedPortion = null;
+    currentEstimate = null;
+    if (document.getElementById('portionGrid'))
+      document.getElementById('portionGrid').innerHTML = '';
   }
 
   // Log burn
